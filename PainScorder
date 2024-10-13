@@ -1,0 +1,112 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+
+public RagFromPain ragFromPainScript; // Ссылка на скрипт RagFromPain
+     
+public class PainScorder : MonoBehaviour
+{
+    // Переменная для боли
+    public int pain = 0;
+
+    // Ссылка на скрипт DamageFall
+    public FallDamage fallDamageScript;
+
+    // Ссылка на объект текста для отображения боли
+    public Text painText;
+
+    // Ссылка на Image "PainScreen"
+    public Image painScreen;
+
+    // Время для вычета боли
+    private float painDecreaseTimer;
+
+    void Start()
+    {
+        // Инициализация таймера
+        painDecreaseTimer = 0f;
+
+        // Подписка на событие получения урона
+        fallDamageScript.onDamageTaken += HandleDamageTaken;
+    }
+
+    void Update()
+    {
+        // Обновление таймера
+        painDecreaseTimer += Time.deltaTime;
+
+        // Вычет боли каждые 5 секунд
+        if (painDecreaseTimer >= 5f)
+        {
+            painDecreaseTimer -= 5f;
+            pain -= 4;
+
+            // Предотвращение отрицательного значения боли
+            pain = Mathf.Max(0, pain);
+
+            // Обновление текста боли
+            painText.text = "Pain: " + pain;
+        }
+    }
+
+    // Обработчик события получения урона
+    private void HandleDamageTaken(int damageAmount)
+    {
+        // Увеличение боли
+        pain += damageAmount;
+
+        // Обновление текста боли
+        painText.text = "Pain: " + pain;
+
+        // Выбор прозрачности в зависимости от уровня боли
+        float alpha = 0f;
+        if (pain > 90)
+        {
+            alpha = 210f;
+        }
+        else if (pain > 70)
+        {
+            alpha = 95f;
+        }
+        else if (pain > 50)
+        {
+            alpha = 75f;
+        }
+        else if (pain > 30)
+        {
+            alpha = 55f;
+        }
+        else if (pain > 20)
+        {
+            alpha = 35f;
+        }
+        else if (pain >= 20) // Изменил условие на >= 20
+        {
+            alpha = 35f;
+        }
+
+        // Показ "PainScreen" с выбранной прозрачностью
+        StartCoroutine(ShowPainScreen(alpha));
+    }
+
+    // Корутина для показа "PainScreen" с плавным исчезновением
+    private IEnumerator ShowPainScreen(float alpha)
+    {
+        // Установка начальной прозрачности
+        painScreen.color = new Color(painScreen.color.r, painScreen.color.g, painScreen.color.b, alpha / 255f);
+
+        // Ожидание 0.5 секунды
+        yield return new WaitForSeconds(0.5f);
+
+        // Плавно изменяем прозрачность в течение 0.5 секунды
+        for (float i = 0; i <= 1; i += Time.deltaTime)
+        {
+            // Линейная интерполяция для плавного перехода
+            painScreen.color = new Color(painScreen.color.r, painScreen.color.g, painScreen.color.b, Mathf.Lerp(alpha / 255f, 0f, i));
+            yield return null;
+        }
+
+        // После окончания анимации возвращаем прозрачность к 0
+        painScreen.color = new Color(painScreen.color.r, painScreen.color.g, painScreen.color.b, 0f);
+    }
+}
